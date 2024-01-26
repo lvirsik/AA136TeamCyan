@@ -6,13 +6,13 @@ from Simulator.simulationConstants import *
 
 def full_dynamics(state, satellite, dt, t):
     # Pull Params
-    throttle = satellite.engine.throttle
-    T = satellite.engine.get_thrust(t, throttle)
+    throttle = 0 #satellite.engine.throttle
+    T = 0 #No Thrust for now
     m = satellite.mass
     lever_arm = satellite.com
-    engine_length = satellite.engine.length
-    posX = satellite.engine.posx
-    posY = satellite.engine.posy
+    engine_length = satellite.engine_length
+    posX = satellite.engine_posx
+    posY = satellite.engine_posy
     v = state[3:6]
     w = state[9:12]
 
@@ -34,9 +34,9 @@ def full_dynamics(state, satellite, dt, t):
     R_inv = np.linalg.inv(R)
 
     # Calculate Accelerations in rocket frame
-    aX_rf = (T * np.sin(gimbal_psi) * -np.cos(gimbal_theta) / m) + (-1 * g * R[0][2])
-    aY_rf = (T * np.sin(gimbal_psi) * -np.sin(gimbal_theta) / m) + (-1 * g * R[1][2])
-    aZ_rf = (T * np.cos(gimbal_psi) / m) + (-1 * g * R[2][2])
+    aX_rf = (T * np.sin(gimbal_psi) * -np.cos(gimbal_theta) / m)
+    aY_rf = (T * np.sin(gimbal_psi) * -np.sin(gimbal_theta) / m)
+    aZ_rf = (T * np.cos(gimbal_psi) / m)
     a_rf = np.array([aX_rf, aY_rf, aZ_rf])
 
     # Convert Accelerations from rocket frame to global frame

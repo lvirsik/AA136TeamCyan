@@ -11,7 +11,6 @@ sim = Simulation(FINAL_TIME, TIMESTEP, INITIAL_STATE, planned_trajectory)
 
 # Run Simulation
 trajectory = sim.propogate()
-sim.display_end_info()
 
 # Graphs
 create_gui(sim, planned_trajectory, trajectory, TIMESTEP, FINAL_TIME)
