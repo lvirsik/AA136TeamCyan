@@ -5,6 +5,7 @@ from scipy.spatial.transform import Rotation
 from Simulator.dynamics import *
 from Simulator.simulationConstants import GRAVITY as g
 from Simulator.simulationConstants import RHO as rho
+from GNC.controller import *
 
 class Simulation:
     """ Class Representing the Simulation and associated data"""
@@ -15,8 +16,7 @@ class Simulation:
         self.statedot_previous = np.zeros((1,len(self.state)))
         self.satellite = Vehicle.satellite.Satellite(simulation_timestep)
         self.ideal_trajectory = planned_trajectory
-        self.position_error_history = np.array([[0,0,0]]) 
-        self.rotation_error_history = np.array([[0,0,0]]) 
+        self.error_history = np.empty((0,12))
         
         # Simulation Variables
         self.ts = simulation_timestep
@@ -57,17 +57,17 @@ class Simulation:
         if (t == 0) or (t >= t_vec[self.current_step] and self.previous_time < t_vec[self.current_step]):
                         
             # Calculate Errors
-            position_error = state[0:6] - ideal_trajectory[self.current_step]
-            rotational_error = state[6:12] - [0, 0, 0, 0, 0, 0]
-            state_error = np.concatenate((position_error, rotational_error), axis=0)
-
-            if t == 0:
-                self.position_error_history = position_error.reshape((1, 6))
-                self.rotation_error_history = rotational_error.reshape((1, 6))
-            else:
-                self.position_error_history = np.append(self.position_error_history, position_error.reshape((1, 6)), axis=0)
-                self.rotation_error_history = np.append(self.rotation_error_history, rotational_error.reshape((1, 6)), axis=0)
+            state_error = state - ideal_trajectory[self.current_step]
+            self.error_history = np.vstack([self.error_history, state_error])
             
+            # Control
+            A = compute_A(state, satellite, self.ts)
+            B = compute_B(state, satellite, self.ts)
+            K = compute_K_flight(len(state), A, B)
+            U = control_satellite(K, state_error)
+            
+            satellite.update_sat_state(U)
+        
             if not t == t_vec[-1]:
                 self.current_step += 1
             self.previous_time = t

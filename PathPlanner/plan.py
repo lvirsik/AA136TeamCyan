@@ -14,32 +14,15 @@ class PlannedTrajectory:
         self.ascent_duration = self.time[-1] / self.ad_timing_proportion
         self.decent_duration = tf - self.ascent_duration
         self.trajectory = self.xyz_trajectory()
-
-    def better(self, t):
-        if t <= self.ascent_duration - ((self.landing_timing_proportion - 1) * self.decent_duration / self.landing_timing_proportion):
-            h = (self.max_altitude - self.max_altitude * (((self.ascent_duration + ((self.landing_timing_proportion - 1) * self.decent_duration / self.landing_timing_proportion)) - self.ascent_duration) / (self.decent_duration))**3)
-            b = (self.ascent_duration + self.decent_duration)
-            a = h / ((b - (self.ascent_duration + ((self.landing_timing_proportion - 1) * self.decent_duration / self.landing_timing_proportion)))**3 - (b - (self.ascent_duration + self.decent_duration))**3)
-            return a * (t)**3
-        elif t <= self.ascent_duration:
-            return self.max_altitude + self.max_altitude * ((t - self.ascent_duration) / self.ascent_duration)**3
-        elif t <= self.ascent_duration + ((self.landing_timing_proportion - 1) * self.decent_duration / self.landing_timing_proportion):
-            return self.max_altitude - self.max_altitude * ((t - self.ascent_duration) / (self.decent_duration))**3
-        else:
-            h = (self.max_altitude - self.max_altitude * (((self.ascent_duration + ((self.landing_timing_proportion - 1) * self.decent_duration / self.landing_timing_proportion)) - self.ascent_duration) / (self.decent_duration))**3)
-            b = (self.ascent_duration + self.decent_duration)
-            a = h / ((b - (self.ascent_duration + ((self.landing_timing_proportion - 1) * self.decent_duration / self.landing_timing_proportion)))**3 - (b - (self.ascent_duration + self.decent_duration))**3)
-            return a * (b - t)**3
-        
-    def sin_trajectory(self, t):
-        return (self.max_altitude * (np.sin((2 * t * np.pi / self.tf) - (np.pi / 2)) + 1) / 2) + 0.1
         
     def xyz_trajectory(self):
-        trajectory = [[0, 0, self.sin_trajectory(t)] for t in self.time]
+        trajectory = [[0, 0, 0] for t in self.time]
         velocity = [[(trajectory[i+1][j] - trajectory[i][j]) / self.ts for j in range(len(trajectory[0]))] for i in range(len(trajectory)-1)]
         velocity.insert(0, [0,0,0])
-        result = np.concatenate((trajectory, velocity), axis=1)
-
+        rotational_trajectory = [[0, 0, 0] for t in self.time]
+        rotational_velocity = [[(rotational_trajectory[i+1][j] - rotational_trajectory[i][j]) / self.ts for j in range(len(rotational_trajectory[0]))] for i in range(len(rotational_trajectory)-1)]
+        rotational_velocity.insert(0, [0,0,0])
+        result = np.concatenate((trajectory, velocity, rotational_trajectory, rotational_velocity), axis=1)
         return np.array(result)
     
     def plot_trajectory(self):
